@@ -1,0 +1,128 @@
+# 🧼 Excel to MySQL: COVID-19 Data Cleaning & Import Guide
+
+This document outlines how I cleaned and imported two COVID-19 datasets — `covid_deaths` and `covid_vaccinations` — from Excel into MySQL for SQL analysis and Tableau visualization.
+
+---
+
+## 📊 Datasets Used
+
+| File | Description |
+|------|-------------|
+| [`covid_deaths.csv`](./data/covid_deaths.csv) | COVID-19 case and death data |
+| [`covid_vaccinations.csv`](./data/covid_vaccinations.csv) | COVID-19 vaccination records |
+
+---
+
+## 📄 Table 1: `covid_deaths`
+
+### ✅ Excel Cleaning Steps
+
+- Converted from `.xlsx` to `.csv`
+- Removed duplicate rows using Excel’s "Remove Duplicates"
+- Replaced blank cells with `NULL` using SQL `NULLIF()` in import
+- Standardized all date formats using `=TEXT(A2, "yyyy-mm-dd")`
+- Trimmed extra whitespace using `TRIM()` function
+
+---
+
+<details>
+<summary>📥 View MySQL Table Schema</summary>
+
+```sql
+CREATE TABLE covid_deaths (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    iso_code VARCHAR(10),
+    continent VARCHAR(50),
+    location VARCHAR(100),
+    date DATE,
+    total_cases INT,
+    new_cases INT,
+    new_cases_smoothed DECIMAL(10,2),
+    total_deaths INT,
+    new_deaths INT,
+    new_deaths_smoothed DECIMAL(10,2)
+    -- more columns can be added here
+);
+
+
+</details> <details> <summary>📦 View LOAD DATA SQL Import</summary>
+
+LOAD DATA LOCAL INFILE '/path/to/covid_deaths.csv'
+INTO TABLE covid_deaths
+FIELDS TERMINATED BY ','
+ENCLOSED BY '"'
+LINES TERMINATED BY '\n'
+IGNORE 1 ROWS
+(
+    iso_code,
+    continent,
+    location,
+    date,
+    total_cases,
+    new_cases,
+    new_cases_smoothed,
+    total_deaths,
+    new_deaths,
+    new_deaths_smoothed
+)
+SET
+    total_cases = NULLIF(total_cases, ''),
+    new_cases = NULLIF(new_cases, ''),
+    new_cases_smoothed = NULLIF(new_cases_smoothed, ''),
+    total_deaths = NULLIF(total_deaths, ''),
+    new_deaths = NULLIF(new_deaths, ''),
+    new_deaths_smoothed = NULLIF(new_deaths_smoothed, '');
+
+</details>
+
+
+<details> <summary>📥 View MySQL Table Schema</summary>
+
+CREATE TABLE covid_vaccinations (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    iso_code VARCHAR(10),
+    continent VARCHAR(50),
+    location VARCHAR(100),
+    date DATE,
+    total_vaccinations INT,
+    people_vaccinated INT,
+    people_fully_vaccinated INT,
+    daily_vaccinations INT,
+    total_vaccinations_per_hundred DECIMAL(6,2),
+    people_vaccinated_per_hundred DECIMAL(6,2),
+    people_fully_vaccinated_per_hundred DECIMAL(6,2),
+    daily_vaccinations_per_million DECIMAL(12,2)
+);
+</details> <details> <summary>📦 View LOAD DATA SQL Import</summary>
+
+LOAD DATA LOCAL INFILE '/path/to/covid_vaccinations.csv'
+INTO TABLE covid_vaccinations
+FIELDS TERMINATED BY ','
+ENCLOSED BY '"'
+LINES TERMINATED BY '\n'
+IGNORE 1 ROWS
+(
+    iso_code,
+    continent,
+    location,
+    date,
+    total_vaccinations,
+    people_vaccinated,
+    people_fully_vaccinated,
+    daily_vaccinations,
+    total_vaccinations_per_hundred,
+    people_vaccinated_per_hundred,
+    people_fully_vaccinated_per_hundred,
+    daily_vaccinations_per_million
+)
+SET
+    total_vaccinations = NULLIF(total_vaccinations, ''),
+    people_vaccinated = NULLIF(people_vaccinated, ''),
+    people_fully_vaccinated = NULLIF(people_fully_vaccinated, ''),
+    daily_vaccinations = NULLIF(daily_vaccinations, ''),
+    total_vaccinations_per_hundred = NULLIF(total_vaccinations_per_hundred, ''),
+    people_vaccinated_per_hundred = NULLIF(people_vaccinated_per_hundred, ''),
+    people_fully_vaccinated_per_hundred = NULLIF(people_fully_vaccinated_per_hundred, ''),
+    daily_vaccinations_per_million = NULLIF(daily_vaccinations_per_million, '');
+
+</details>
